@@ -1,6 +1,8 @@
 package com.group2.stackelbergBot;
 
 
+import lombok.extern.java.Log;
+
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.Random;
@@ -11,6 +13,7 @@ import java.util.TimerTask;
  * A very simple leader implementation that only generates random prices
  * @author Xin
  */
+@Log
 class SimpleLeader extends PlayerImpl
 {
 	/* The randomizer used to generate random price */
@@ -51,6 +54,18 @@ class SimpleLeader extends PlayerImpl
 	private float genPrice(final float p_mean, final float p_diversity)
 	{
 		return (float) (p_mean + m_randomizer.nextGaussian() * p_diversity);
+	}
+
+	public static void main(String[] p_args) throws RemoteException, NotBoundException {
+//		new SimpleLeader();
+
+		try {
+			SimpleLeader leader = new SimpleLeader();
+
+			leader.checkConnection();
+		} catch (Exception e ) {
+			log.info("Connection not working:" + e.getMessage());
+		}
 	}
 
 
