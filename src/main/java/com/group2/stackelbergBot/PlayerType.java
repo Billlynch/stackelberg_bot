@@ -1,4 +1,4 @@
-package comp34120.ex2;
+package com.group2.stackelbergBot;
 
 /**
  * The types of the players

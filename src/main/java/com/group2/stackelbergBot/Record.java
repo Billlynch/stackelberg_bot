@@ -1,4 +1,4 @@
-package comp34120.ex2;
+package com.group2.stackelbergBot;
 
 import java.io.Serializable;
 
@@ -10,7 +10,7 @@ public final class Record
 	implements Serializable
 {
 	/* The date of the record */
-	public final int m_date;
+	private final int m_date;
 	/* The price of the leader */
 	public final float m_leaderPrice;
 	/* The price of the follower */

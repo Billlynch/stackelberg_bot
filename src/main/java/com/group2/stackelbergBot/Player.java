@@ -1,4 +1,4 @@
-package comp34120.ex2;
+package com.group2.stackelbergBot;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -10,18 +10,18 @@ import java.rmi.RemoteException;
 public interface Player
 	extends Remote
 {
-	public void checkConnection()
+	void checkConnection()
 		throws RemoteException;
 
-	public void goodbye()
+	void goodbye()
 		throws RemoteException;
 
-	public void startSimulation(final int p_steps)
+	void startSimulation(final int p_steps)
 		throws RemoteException;
 
-	public void endSimulation()
+	void endSimulation()
 		throws RemoteException;
 
-	public void proceedNewDay(final int p_date)
+	void proceedNewDay(final int p_date)
 		throws RemoteException;
 }

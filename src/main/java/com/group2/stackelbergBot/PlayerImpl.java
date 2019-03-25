@@ -1,4 +1,4 @@
-package comp34120.ex2;
+package com.group2.stackelbergBot;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;

@@ -1,5 +1,5 @@
-import comp34120.ex2.PlayerImpl;
-import comp34120.ex2.PlayerType;
+package com.group2.stackelbergBot;
+
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
@@ -10,8 +10,7 @@ import java.rmi.RemoteException;
  * the platform by calling the remote method provided by it.
  * @author Xin
  */
-final class PseudoLeader
-	extends PlayerImpl
+final class PseudoLeader extends PlayerImpl
 {
 	/**
 	 * In the constructor, you need to call the constructor

@@ -1,4 +1,4 @@
-package comp34120.ex2;
+package com.group2.stackelbergBot;
 
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
@@ -17,7 +17,7 @@ public interface Platform
 	public void registerPlayer(final PlayerType p_type,
 		final String p_displayName)
 		throws RemoteException, NotBoundException;
-	
+
 	public Record query(final PlayerType p_type,
 		final int p_queryDate)
 		throws RemoteException;

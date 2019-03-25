@@ -1,5 +1,6 @@
-import comp34120.ex2.PlayerImpl;
-import comp34120.ex2.PlayerType;
+package com.group2.stackelbergBot;
+
+
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.Random;
@@ -10,13 +11,12 @@ import java.util.TimerTask;
  * A very simple leader implementation that only generates random prices
  * @author Xin
  */
-final class SimpleLeader
-	extends PlayerImpl
+class SimpleLeader extends PlayerImpl
 {
 	/* The randomizer used to generate random price */
 	private final Random m_randomizer = new Random(System.currentTimeMillis());
 
-	private SimpleLeader()
+	SimpleLeader()
 		throws RemoteException, NotBoundException
 	{
 		super(PlayerType.LEADER, "Simple Leader");
@@ -53,11 +53,6 @@ final class SimpleLeader
 		return (float) (p_mean + m_randomizer.nextGaussian() * p_diversity);
 	}
 
-	public static void main(final String[] p_args)
-		throws RemoteException, NotBoundException
-	{
-		new SimpleLeader();
-	}
 
 	/**
 	 * The task used to automatically exit the leader process
@@ -70,7 +65,7 @@ final class SimpleLeader
 		{
 			(new Timer()).schedule(new ExitTask(), p_delay);
 		}
-		
+
 		@Override
 		public void run()
 		{
