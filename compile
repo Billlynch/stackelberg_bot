@@ -4,7 +4,7 @@
 mkdir temp
 
 # Compile into the temp dir
-javac ./src/*.java -d temp
+javac -classpath commons-math3-3.6.1.jar: ./src/*.java -d temp
 
 #Move over our source code to the root - Add any new classes here too
 mv temp/Group3Leader* ./
