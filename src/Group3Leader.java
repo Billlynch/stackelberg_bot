@@ -61,9 +61,6 @@ final class Group3Leader extends PlayerImpl {
 	}
 
 	/**
-	 * 
-	 * @param p_mean      The mean of the Gaussian distribution
-	 * @param p_diversity The diversity of the Gaussian distribution
 	 * @return The generated price
 	 */
 	private float genPrice() {
