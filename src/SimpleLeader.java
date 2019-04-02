@@ -20,6 +20,7 @@ final class SimpleLeader
 		throws RemoteException, NotBoundException
 	{
 		super(PlayerType.LEADER, "Simple Leader");
+		System.out.println("Hello world from the leader I made");
 	}
 
 	@Override

@@ -1,0 +1,31 @@
+
+# STEP 1 # 
+---
+Run the rmi registry 
+---
+
+RUN rmiregistry
+
+for Mac: /usr/bin/rmiregistry &
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+# STEP 2 # 
+---
+Run the GUI and the follower
+---
+
+RUN ./run_gui_and_follower
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+# STEP 3 # 
+---
+Make changes to the code and run this to compile and connect to the running gui based application. 
+---
+
+RUN ./compile_and_run
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
