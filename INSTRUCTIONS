@@ -6,7 +6,7 @@ Run the rmi registry
 
 RUN rmiregistry
 
-for Mac: /usr/bin/rmiregistry &
+for Mac: /usr/bin/rmiregistry & 
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 

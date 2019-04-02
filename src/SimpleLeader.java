@@ -5,6 +5,7 @@ import java.rmi.RemoteException;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
+import comp34120.ex2.Record;
 
 /**
  * A very simple leader implementation that only generates random prices
@@ -19,8 +20,12 @@ final class SimpleLeader
 	private SimpleLeader()
 		throws RemoteException, NotBoundException
 	{
-		super(PlayerType.LEADER, "Simple Leader");
-		System.out.println("Hello world from the leader I made");
+		super(PlayerType.LEADER, "Group 3 Leader");
+
+		Record day = m_platformStub.query(m_type, 50);
+		System.out.println("here");
+
+		System.out.println(String.valueOf(day.m_followerPrice));
 	}
 
 	@Override
@@ -78,4 +83,5 @@ final class SimpleLeader
 			System.exit(0);
 		}
 	}
+
 }

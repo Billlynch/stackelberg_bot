@@ -1,10 +1,12 @@
 package comp34120.ex2;
 
+import comp34120.ex2.PlayerType;;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+
 
 /**
  * To implement some common method of players
