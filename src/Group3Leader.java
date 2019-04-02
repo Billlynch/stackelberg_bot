@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A very simple leader implementation that only generates random prices
@@ -22,10 +23,12 @@ final class Group3Leader
 	private ArrayList<Record> records = new ArrayList<Record>();
 	private static final int WINDOW_SIZE = 20;
 
+
 	private Group3Leader()
 		throws RemoteException, NotBoundException
 	{
 		super(PlayerType.LEADER, "Group 3 Leader");
+
 		System.out.println("Group 3 Leader, Online");
 	}
 
@@ -44,7 +47,10 @@ final class Group3Leader
 			records.add(m_platformStub.query(m_type, i + 1)); //1 indexed..
 			// m_platformStub.log(m_type, "Output: " + String.valueOf(m_platformStub.query(m_type, i).m_followerPrice));
 		}
+		ReactionFunction reactionFunction = new ReactionFunction(records);
 		m_platformStub.log(m_type, String.valueOf(records.size() + " Records slurped"));
+
+		m_platformStub.log(m_type, String.valueOf(reactionFunction.reactionDifferenceFromActual + " difference"));
 	}
 
 	/**
@@ -93,6 +99,73 @@ final class Group3Leader
 		public void run()
 		{
 			System.exit(0);
+		}
+	}
+
+	class ReactionFunction {
+		public float aPrime;
+		public float bPrime;
+		public List<Record> records;
+		public float reactionDifferenceFromActual;
+
+		public ReactionFunction() {
+		}
+
+		public ReactionFunction(List<Record> records) {
+			this.records = records;
+			this.aPrime = calculateA();
+			this.bPrime = calculateB();
+			this.reactionDifferenceFromActual = reactionDifferenceFromActual();
+		}
+
+		private float calculateA() {
+			float T = records.size();
+			float sumOfX = 0;
+			float sumOfY = 0;
+			float sumOfXY = 0;
+			float sumOfXSquared = 0;
+
+			for (int i = 0; i < records.size(); i++) {
+				sumOfX += records.get(i).m_leaderPrice;
+				sumOfY += records.get(i).m_followerPrice;
+
+				sumOfXY += (records.get(i).m_leaderPrice * records.get(i).m_followerPrice);
+				sumOfXSquared += (records.get(i).m_leaderPrice * records.get(i).m_leaderPrice);
+			}
+
+			float result = ((sumOfXSquared * sumOfY) - (sumOfX * sumOfXY)) / ((T * sumOfXSquared) - (sumOfX * sumOfX));
+
+			return result;
+		}
+
+		private float calculateB() {
+			float T = records.size();
+			float sumOfX = 0;
+			float sumOfY = 0;
+			float sumOfXY = 0;
+			float sumOfXSquared = 0;
+
+			for (int i = 0; i < records.size(); i++) {
+				sumOfX += records.get(i).m_leaderPrice;
+				sumOfY += records.get(i).m_followerPrice;
+
+				sumOfXY += (records.get(i).m_leaderPrice * records.get(i).m_followerPrice);
+				sumOfXSquared += (records.get(i).m_leaderPrice * records.get(i).m_leaderPrice);
+			}
+
+			float result = ((T * sumOfXY) - (sumOfX * sumOfY)) / ((T * sumOfXSquared) - (sumOfX * sumOfX));
+
+			return result;
+		}
+
+		private float reactionDifferenceFromActual() {
+			float result = 0;
+			for (int i = 0; i < records.size(); i++) {
+				float temp = records.get(i).m_followerPrice - (aPrime + bPrime * records.get(i).m_leaderPrice);
+				result += (temp * temp);
+			}
+
+			return result;
 		}
 	}
 }
