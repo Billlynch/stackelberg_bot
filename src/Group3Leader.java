@@ -19,7 +19,6 @@ import org.apache.commons.math3.complex.Complex;
 
 /**
  * A very simple leader implementation that only generates random prices
- * 
  * @author Xin
  */
 final class Group3Leader extends PlayerImpl {
@@ -27,11 +26,12 @@ final class Group3Leader extends PlayerImpl {
 	private final Random m_randomizer = new Random(System.currentTimeMillis());
 
 	private ArrayList<Record> records = new ArrayList<Record>();
-	private static final int MIN_WINDOW_SIZE = 5;
+	private static final int WINDOW_SIZE = 20;
 	private static final int MAX_WINDOW_SIZE = 60;
 
-
-	private Group3Leader() throws RemoteException, NotBoundException {
+	private Group3Leader()
+		throws RemoteException, NotBoundException
+	{
 		super(PlayerType.LEADER, "Group 3 Leader");
 
 		System.out.println("Group 3 Leader, Online");
@@ -44,7 +44,6 @@ final class Group3Leader extends PlayerImpl {
 
 	@Override
 	public void startSimulation(int p_steps) throws RemoteException {
-		System.out.println("started");
 		// for (int i = 0; i < WINDOW_SIZE; i++) {
 		// 	records.add(m_platformStub.query(m_type, i + 1)); // 1 indexed..
 		// 	// m_platformStub.log(m_type, "Output: " +
@@ -58,7 +57,7 @@ final class Group3Leader extends PlayerImpl {
 
 	/**
 	 * To inform this instance to proceed to a new simulation day
-	 * 
+	 *
 	 * @param p_date The date of the new day
 	 * @throws RemoteException
 	 */
@@ -85,7 +84,7 @@ final class Group3Leader extends PlayerImpl {
 
 		Integer bestWindowSize = Collections.min(windowsSizeToDifference.entrySet(), Map.Entry.comparingByValue())
 										.getKey();
-		System.out.println("on day: " + p_date + " window size: " + bestWindowSize + " was chosen, with a difference of: " + windowsSizeToDifference.get(bestWindowSize) + " with C, X, X^2: " + windowsSizeToCoeficients.get(bestWindowSize)[0] + ", " +  windowsSizeToCoeficients.get(bestWindowSize)[1] + ", " +  windowsSizeToCoeficients.get(bestWindowSize)[2] + "." );
+		System.out.println("on day: " + p_date + " window size: " + bestWindowSize + " was chosen, with a difference of: " + windowsSizeToDifference.get(bestWindowSize) + ".");
 
 		m_platformStub.publishPrice(m_type, genPrice(windowsSizeToCoeficients.get(bestWindowSize)));
 	}
@@ -111,9 +110,8 @@ final class Group3Leader extends PlayerImpl {
 		// solve: xSquaredCoeff x^2 + xCoeff x + (constant - max) = 0
 		LaguerreSolver solver = new LaguerreSolver();
 		Complex[] complexRoots = solver.solveAllComplex(coefs, 1);
-		float price = 1.75f;
+		float price = 200f;
 
-	
 		for (Complex root : complexRoots) {
 			if (root.getReal() > 0) {
 				price = (float) root.getReal();
@@ -142,7 +140,6 @@ final class Group3Leader extends PlayerImpl {
 
 	/**
 	 * The task used to automatically exit the leader process
-	 * 
 	 * @author Xin
 	 */
 	private static class ExitTask extends TimerTask {
