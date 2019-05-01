@@ -76,14 +76,14 @@ final class Group3Leader extends PlayerImpl {
 	}
 
 	private float findPriceThatMaximisesGraph(double[] equationCoeffs) {
-
 		float max = findMaxOfGraph(equationCoeffs);
+		equationCoeffs[0] = equationCoeffs[0] - max;
 
 		// solve: xSquaredCoeff x^2 + xCoeff x + (constant - max) = 0
-
 		LaguerreSolver solver = new LaguerreSolver();
 		Complex[] complexRoots = solver.solveAllComplex(equationCoeffs, 1);
 		float price = 1f;
+
 		for (Complex root : complexRoots) {
 			if (root.getReal() > 1) {
 				price = (float) root.getReal();
