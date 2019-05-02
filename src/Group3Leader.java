@@ -105,7 +105,7 @@ final class Group3Leader extends PlayerImpl {
 		// solve: xSquaredCoeff x^2 + xCoeff x + (constant - max) = 0
 		LaguerreSolver solver = new LaguerreSolver();
 		Complex[] complexRoots = solver.solveAllComplex(coefs, 1);
-		float price = 200f;
+		float price = 1.75f;
 
 	
 		for (Complex root : complexRoots) {
