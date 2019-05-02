@@ -27,7 +27,7 @@ final class Group3Leader extends PlayerImpl {
 	private final Random m_randomizer = new Random(System.currentTimeMillis());
 
 	private ArrayList<Record> records = new ArrayList<Record>();
-	private static final int WINDOW_SIZE = 20;
+	private static final int MIN_WINDOW_SIZE = 5;
 	private static final int MAX_WINDOW_SIZE = 60;
 
 
@@ -44,15 +44,15 @@ final class Group3Leader extends PlayerImpl {
 
 	@Override
 	public void startSimulation(int p_steps) throws RemoteException {
-		for (int i = 0; i < WINDOW_SIZE; i++) {
-			records.add(m_platformStub.query(m_type, i + 1)); // 1 indexed..
-			// m_platformStub.log(m_type, "Output: " +
-			// String.valueOf(m_platformStub.query(m_type, i).m_followerPrice));
-		}
-		ReactionFunction reactionFunction = new ReactionFunction(records);
-		m_platformStub.log(m_type, String.valueOf(records.size() + " Records slurped"));
+		// for (int i = 0; i < WINDOW_SIZE; i++) {
+		// 	records.add(m_platformStub.query(m_type, i + 1)); // 1 indexed..
+		// 	// m_platformStub.log(m_type, "Output: " +
+		// 	// String.valueOf(m_platformStub.query(m_type, i).m_followerPrice));
+		// }
+		// ReactionFunction reactionFunction = new ReactionFunction(records);
+		// m_platformStub.log(m_type, String.valueOf(records.size() + " Records slurped"));
 
-		m_platformStub.log(m_type, String.valueOf(reactionFunction.reactionDifferenceFromActual + " difference"));
+		// m_platformStub.log(m_type, String.valueOf(reactionFunction.reactionDifferenceFromActual + " difference"));
 	}
 
 	/**
@@ -63,15 +63,12 @@ final class Group3Leader extends PlayerImpl {
 	 */
 	@Override
 	public void proceedNewDay(int p_date) throws RemoteException {
-		// System.out.print("Date: " + p_date);
-		System.out.println("new day called");
-
 		HashMap<Integer, Float> windowsSizeToDifference = new HashMap();
 		HashMap<Integer, Double[]> windowsSizeToCoeficients = new HashMap();
 
 
 		records.clear();
-		for (int i = 0; i <= MAX_WINDOW_SIZE; i++) {
+		for (int i = MIN_WINDOW_SIZE; i <= MAX_WINDOW_SIZE; i++) {
 			records.add(m_platformStub.query(m_type, p_date - i)); // 1 indexed..
 			ReactionFunction reactionFunction = new ReactionFunction(records);
 			windowsSizeToDifference.put(i, reactionFunction.reactionDifferenceFromActual);
@@ -81,6 +78,7 @@ final class Group3Leader extends PlayerImpl {
 		// window with the minimum distance is the best one.
 		Integer bestWindowSize = Collections.min(windowsSizeToDifference.entrySet(), Map.Entry.comparingByValue())
 										.getKey();
+		System.out.println("on day: " + p_date + " window size: " + bestWindowSize + " was chosen.");
 
 		m_platformStub.publishPrice(m_type, genPrice(windowsSizeToCoeficients.get(bestWindowSize)));
 	}
@@ -92,7 +90,6 @@ final class Group3Leader extends PlayerImpl {
 		// Find max of each graph for each window size.
 		// Once max found, find the solution that corresponds to that maximum (providied x > 1).
 		// That solution is the price.
-		System.out.println("gen called");
 		return findPriceThatMaximisesGraph(equationCoeffs);
 	}
 
