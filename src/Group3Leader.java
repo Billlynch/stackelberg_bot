@@ -76,9 +76,10 @@ final class Group3Leader extends PlayerImpl {
 		}
 
 		// window with the minimum distance is the best one.
+
 		Integer bestWindowSize = Collections.min(windowsSizeToDifference.entrySet(), Map.Entry.comparingByValue())
 										.getKey();
-		System.out.println("on day: " + p_date + " window size: " + bestWindowSize + " was chosen.");
+		System.out.println("on day: " + p_date + " window size: " + bestWindowSize + " was chosen, with a difference of: " + windowsSizeToDifference.get(bestWindowSize) + ".");
 
 		m_platformStub.publishPrice(m_type, genPrice(windowsSizeToCoeficients.get(bestWindowSize)));
 	}
@@ -104,10 +105,11 @@ final class Group3Leader extends PlayerImpl {
 		// solve: xSquaredCoeff x^2 + xCoeff x + (constant - max) = 0
 		LaguerreSolver solver = new LaguerreSolver();
 		Complex[] complexRoots = solver.solveAllComplex(coefs, 1);
-		float price = 1f;
+		float price = 200f;
 
+	
 		for (Complex root : complexRoots) {
-			if (root.getReal() > 1) {
+			if (root.getReal() > 0) {
 				price = (float) root.getReal();
 			}
 		}
