@@ -64,47 +64,49 @@ final class Group3Leader extends PlayerImpl {
 	@Override
 	public void proceedNewDay(int p_date) throws RemoteException {
 		// System.out.print("Date: " + p_date);
+		System.out.println("new day called");
+
 		HashMap<Integer, Float> windowsSizeToDifference = new HashMap();
-		// on every new day get the value for the provious [max window size].
+		HashMap<Integer, Double[]> windowsSizeToCoeficients = new HashMap();
+
+
 		records.clear();
-		for (int i = p_date - MAX_WINDOW_SIZE; i <= p_date; i++) {
-			records.add(m_platformStub.query(m_type, i)); // 1 indexed..
+		for (int i = 0; i <= MAX_WINDOW_SIZE; i++) {
+			records.add(m_platformStub.query(m_type, p_date - i)); // 1 indexed..
 			ReactionFunction reactionFunction = new ReactionFunction(records);
-			// System.err.println("window size: " + (p_date - i) + " difference: " + reactionFunction.reactionDifferenceFromActual);
-			windowsSizeToDifference.put(p_date - i, reactionFunction.reactionDifferenceFromActual);
+			windowsSizeToDifference.put(i, reactionFunction.reactionDifferenceFromActual);
+			windowsSizeToCoeficients.put(i, getEquationCoeffs(reactionFunction));
 		}
 
-		// find the max in the hash map, that is the optimal window size for this day.
-		Integer bestWindowSize = Collections.min(windowsSizeToDifference.entrySet(), Map.Entry.comparingByValue()).getKey();
-	
-		// System.out.print(" bestWindowSize: " + bestWindowSize);
-		// System.out.println(" with value: " + windowsSizeToDifference.get(bestWindowSize));
+		// window with the minimum distance is the best one.
+		Integer bestWindowSize = Collections.min(windowsSizeToDifference.entrySet(), Map.Entry.comparingByValue())
+										.getKey();
 
-		m_platformStub.publishPrice(m_type, genPrice());
+		m_platformStub.publishPrice(m_type, genPrice(windowsSizeToCoeficients.get(bestWindowSize)));
 	}
 
 	/**
 	 * @return The generated price
 	 */
-	private float genPrice() {
+	private float genPrice(Double[] equationCoeffs) {
 		// Find max of each graph for each window size.
 		// Once max found, find the solution that corresponds to that maximum (providied x > 1).
 		// That solution is the price.
-
-		ReactionFunction reactionFunction = new ReactionFunction(records);
-
-		double[] equationCoeffs = getEquationCoeffs(reactionFunction);
-
+		System.out.println("gen called");
 		return findPriceThatMaximisesGraph(equationCoeffs);
 	}
 
-	private float findPriceThatMaximisesGraph(double[] equationCoeffs) {
+	private float findPriceThatMaximisesGraph(Double[] equationCoeffs) {
 		float max = findMaxOfGraph(equationCoeffs);
-		equationCoeffs[0] = equationCoeffs[0] - max;
+
+		double[] coefs = {0,0,0};
+		coefs[0] = equationCoeffs[0] - max;
+		coefs[1] = equationCoeffs[1];
+		coefs[2] = equationCoeffs[2];
 
 		// solve: xSquaredCoeff x^2 + xCoeff x + (constant - max) = 0
 		LaguerreSolver solver = new LaguerreSolver();
-		Complex[] complexRoots = solver.solveAllComplex(equationCoeffs, 1);
+		Complex[] complexRoots = solver.solveAllComplex(coefs, 1);
 		float price = 1f;
 
 		for (Complex root : complexRoots) {
@@ -115,18 +117,18 @@ final class Group3Leader extends PlayerImpl {
 		return price;
 	}
 
-	private float findMaxOfGraph(double[] equationCoeffs) {
+	private float findMaxOfGraph(Double[] equationCoeffs) {
 		// Max = c - (b^2 / 4a)
 		return (float) (equationCoeffs[0] - ((equationCoeffs[1] * equationCoeffs[1]) / (4 * equationCoeffs[2])));
 	}
 
-	private double[] getEquationCoeffs(ReactionFunction reactionFunction) {
+	private Double[] getEquationCoeffs(ReactionFunction reactionFunction) {
 		// Formula: (0.3b - 1)x^2 + (0.3a - 0.3b + 3)x + (- 0.3a - 2)
 		double xSquaredCoeff = 0.3 * reactionFunction.bPrime - 1;
 		double xCoeff = 0.3 * reactionFunction.aPrime - 0.3 * reactionFunction.bPrime + 3;
 		double constant = -0.3 * reactionFunction.aPrime - 2;
 
-		return new double[] {constant, xCoeff, xSquaredCoeff};
+		return new Double[] {constant, xCoeff, xSquaredCoeff};
 	}
 
 	public static void main(final String[] p_args) throws RemoteException, NotBoundException {
