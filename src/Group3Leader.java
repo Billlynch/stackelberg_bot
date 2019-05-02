@@ -8,7 +8,11 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.math3.analysis.solvers.*;
 import org.apache.commons.math3.complex.Complex;
@@ -24,6 +28,8 @@ final class Group3Leader extends PlayerImpl {
 
 	private ArrayList<Record> records = new ArrayList<Record>();
 	private static final int WINDOW_SIZE = 20;
+	private static final int MAX_WINDOW_SIZE = 60;
+
 
 	private Group3Leader() throws RemoteException, NotBoundException {
 		super(PlayerType.LEADER, "Group 3 Leader");
@@ -57,6 +63,23 @@ final class Group3Leader extends PlayerImpl {
 	 */
 	@Override
 	public void proceedNewDay(int p_date) throws RemoteException {
+		// System.out.print("Date: " + p_date);
+		HashMap<Integer, Float> windowsSizeToDifference = new HashMap();
+		// on every new day get the value for the provious [max window size].
+		records.clear();
+		for (int i = p_date - MAX_WINDOW_SIZE; i <= p_date; i++) {
+			records.add(m_platformStub.query(m_type, i)); // 1 indexed..
+			ReactionFunction reactionFunction = new ReactionFunction(records);
+			// System.err.println("window size: " + (p_date - i) + " difference: " + reactionFunction.reactionDifferenceFromActual);
+			windowsSizeToDifference.put(p_date - i, reactionFunction.reactionDifferenceFromActual);
+		}
+
+		// find the max in the hash map, that is the optimal window size for this day.
+		Integer bestWindowSize = Collections.min(windowsSizeToDifference.entrySet(), Map.Entry.comparingByValue()).getKey();
+	
+		// System.out.print(" bestWindowSize: " + bestWindowSize);
+		// System.out.println(" with value: " + windowsSizeToDifference.get(bestWindowSize));
+
 		m_platformStub.publishPrice(m_type, genPrice());
 	}
 
