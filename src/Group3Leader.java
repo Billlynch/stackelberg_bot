@@ -75,7 +75,6 @@ final class Group3Leader extends PlayerImpl {
 		}
 
 		for (int i = MIN_WINDOW_SIZE; i <= MAX_WINDOW_SIZE; i++) {
-
 			records.add(m_platformStub.query(m_type, p_date - i)); // 1 indexed..
 			ReactionFunction reactionFunction = new ReactionFunction(records);
 			windowsSizeToDifference.put(i, reactionFunction.reactionDifferenceFromActual);
