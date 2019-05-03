@@ -57,8 +57,8 @@ final class Group3Leader extends PlayerImpl {
 	@Override
 	public void proceedNewDay(int p_date) throws RemoteException {
 		currentDay = p_date;
-		HashMap<Integer, Float> windowsSizeToDifference = new HashMap();
-		HashMap<Integer, Double[]> windowsSizeToCoeficients = new HashMap();
+		HashMap<Integer, Float> windowsSizeToDifference = new HashMap<>();
+		HashMap<Integer, Double[]> windowsSizeToCoeficients = new HashMap<>();
 
 
 		records.clear();
@@ -117,7 +117,7 @@ final class Group3Leader extends PlayerImpl {
 		// it's gone wrong  - choose the average of the last 5 days or 1.75
 		if (price < 0) {
 			try {
-				List<Record> rList = new ArrayList();
+				List<Record> rList = new ArrayList<>();
 				for (int i = 1; i <= 5; i++) {
 					rList.add(m_platformStub.query(m_type, currentDay - i)); // 1 indexed..
 				}
@@ -209,29 +209,28 @@ final class Group3Leader extends PlayerImpl {
 
 		private float calculateB() {
 			float T = records.size();
-			BigDecimal TBigDecimal = BigDecimal.valueOf(records.size());
-			BigDecimal sumOfX = BigDecimal.ZERO;
-			BigDecimal sumOfY = BigDecimal.ZERO;
-			BigDecimal sumOfXY = BigDecimal.ZERO;
-			BigDecimal sumOfXSquared = BigDecimal.ZERO;
+			double sumOfX = 0;
+			double sumOfY = 0;
+			double sumOfXY = 0;
+			double sumOfXSquared = 0;
 
 			for (int i = 0; i < T; i++) {
-				sumOfX = sumOfX.add(BigDecimal.valueOf(records.get(i).m_leaderPrice));
-				sumOfY = sumOfY.add(BigDecimal.valueOf(records.get(i).m_followerPrice));
+				sumOfX += records.get(i).m_leaderPrice;
+				sumOfY += records.get(i).m_followerPrice;
 
-				sumOfXY = sumOfXY.add(BigDecimal.valueOf((records.get(i).m_leaderPrice * records.get(i).m_followerPrice)));
-				sumOfXSquared = sumOfXSquared.add(BigDecimal.valueOf(records.get(i).m_leaderPrice * records.get(i).m_leaderPrice));
+				sumOfXY += records.get(i).m_leaderPrice * records.get(i).m_followerPrice;
+				sumOfXSquared += records.get(i).m_leaderPrice * records.get(i).m_leaderPrice;
 			}
 
-			BigDecimal numerator = ((TBigDecimal.multiply(sumOfXY)).subtract(sumOfX.multiply(sumOfY)));
-			BigDecimal denominator1 = (TBigDecimal.multiply(sumOfXSquared));
-			BigDecimal denominator2 = sumOfX.pow(2);
-			BigDecimal denominator = (denominator1.subtract(denominator2));
+			double numerator =  (T * sumOfXY) - (sumOfX * sumOfY);
+			double denominator1 = T * sumOfXSquared;
+			double denominator2 = sumOfX * sumOfX;
+			double denominator = denominator1 - denominator2;
 
 
-			BigDecimal resultBigDec = numerator.divide(denominator, BigDecimal.ROUND_HALF_EVEN) ;
+			double resultBigDec = numerator / denominator;
 
-			float result = resultBigDec.floatValue() ;
+			float result = (float)resultBigDec;
 			
 			return result;
 		}
