@@ -13,12 +13,14 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.math.BigDecimal;
 
 import org.apache.commons.math3.analysis.solvers.*;
 import org.apache.commons.math3.complex.Complex;
 
 /**
  * A very simple leader implementation that only generates random prices
+ * 
  * @author Xin
  */
 final class Group3Leader extends PlayerImpl {
@@ -26,12 +28,11 @@ final class Group3Leader extends PlayerImpl {
 	private final Random m_randomizer = new Random(System.currentTimeMillis());
 
 	private ArrayList<Record> records = new ArrayList<Record>();
-	private static final int WINDOW_SIZE = 20;
+	private static final int MIN_WINDOW_SIZE = 5;
 	private static final int MAX_WINDOW_SIZE = 60;
 
-	private Group3Leader()
-		throws RemoteException, NotBoundException
-	{
+
+	private Group3Leader() throws RemoteException, NotBoundException {
 		super(PlayerType.LEADER, "Group 3 Leader");
 
 		System.out.println("Group 3 Leader, Online");
@@ -44,6 +45,7 @@ final class Group3Leader extends PlayerImpl {
 
 	@Override
 	public void startSimulation(int p_steps) throws RemoteException {
+		System.out.println("started");
 		// for (int i = 0; i < WINDOW_SIZE; i++) {
 		// 	records.add(m_platformStub.query(m_type, i + 1)); // 1 indexed..
 		// 	// m_platformStub.log(m_type, "Output: " +
@@ -57,7 +59,7 @@ final class Group3Leader extends PlayerImpl {
 
 	/**
 	 * To inform this instance to proceed to a new simulation day
-	 *
+	 * 
 	 * @param p_date The date of the new day
 	 * @throws RemoteException
 	 */
@@ -79,7 +81,11 @@ final class Group3Leader extends PlayerImpl {
 
 		Integer bestWindowSize = Collections.min(windowsSizeToDifference.entrySet(), Map.Entry.comparingByValue())
 										.getKey();
-		System.out.println("on day: " + p_date + " window size: " + bestWindowSize + " was chosen, with a difference of: " + windowsSizeToDifference.get(bestWindowSize) + ".");
+		//System.out.println("on day: " + p_date + " window size: " + bestWindowSize + " was chosen, with a difference of: " + windowsSizeToDifference.get(bestWindowSize) + " with C, X, X^2: " + windowsSizeToCoeficients.get(bestWindowSize)[0] + ", " +  windowsSizeToCoeficients.get(bestWindowSize)[1] + ", " +  windowsSizeToCoeficients.get(bestWindowSize)[2] + "." );
+
+//		if(windowsSizeToCoeficients.get(bestWindowSize)[2] > 0) {
+//			System.out.println("On day: " + p_date + ", X^2 value over 0 of: " + windowsSizeToCoeficients.get(bestWindowSize)[2]);
+//		}
 
 		m_platformStub.publishPrice(m_type, genPrice(windowsSizeToCoeficients.get(bestWindowSize)));
 	}
@@ -102,16 +108,12 @@ final class Group3Leader extends PlayerImpl {
 		coefs[1] = equationCoeffs[1];
 		coefs[2] = equationCoeffs[2];
 
-		double[] coefs = {0,0,0};
-		coefs[0] = equationCoeffs[0] - max;
-		coefs[1] = equationCoeffs[1];
-		coefs[2] = equationCoeffs[2];
-
 		// solve: xSquaredCoeff x^2 + xCoeff x + (constant - max) = 0
 		LaguerreSolver solver = new LaguerreSolver();
 		Complex[] complexRoots = solver.solveAllComplex(coefs, 1);
 		float price = 200f;
 
+	
 		for (Complex root : complexRoots) {
 			if (root.getReal() > 0) {
 				price = (float) root.getReal();
@@ -128,6 +130,9 @@ final class Group3Leader extends PlayerImpl {
 	private Double[] getEquationCoeffs(ReactionFunction reactionFunction) {
 		// Formula: (0.3b - 1)x^2 + (0.3a - 0.3b + 3)x + (- 0.3a - 2)
 		double xSquaredCoeff = 0.3 * reactionFunction.bPrime - 1;
+//		if (reactionFunction.bPrime > 3.3){
+//			System.out.println("X^2 value in window checks of: " + xSquaredCoeff + " from b prime value of: " + reactionFunction.bPrime);
+//		}
 		double xCoeff = 0.3 * reactionFunction.aPrime - 0.3 * reactionFunction.bPrime + 3;
 		double constant = -0.3 * reactionFunction.aPrime - 2;
 
@@ -140,6 +145,7 @@ final class Group3Leader extends PlayerImpl {
 
 	/**
 	 * The task used to automatically exit the leader process
+	 * 
 	 * @author Xin
 	 */
 	private static class ExitTask extends TimerTask {
@@ -188,57 +194,35 @@ final class Group3Leader extends PlayerImpl {
 
 		private float calculateB() {
 			float T = records.size();
-			float sumOfX = 0;
-			float sumOfY = 0;
-			float sumOfXY = 0;
-			float sumOfXSquared = 0;
+			BigDecimal TBigDecimal = BigDecimal.valueOf(records.size());
+			BigDecimal sumOfX = BigDecimal.ZERO;
+			BigDecimal sumOfY = BigDecimal.ZERO;
+			BigDecimal sumOfXY = BigDecimal.ZERO;
+			BigDecimal sumOfXSquared = BigDecimal.ZERO;
 
-			for (int i = 0; i < records.size(); i++) {
-				sumOfX += records.get(i).m_leaderPrice;
-				sumOfY += records.get(i).m_followerPrice;
+			for (int i = 0; i < T; i++) {
+				sumOfX = sumOfX.add(BigDecimal.valueOf(records.get(i).m_leaderPrice));
+				sumOfY = sumOfY.add(BigDecimal.valueOf(records.get(i).m_followerPrice));
 
-				sumOfXY += (records.get(i).m_leaderPrice * records.get(i).m_followerPrice);
-				sumOfXSquared += (records.get(i).m_leaderPrice * records.get(i).m_leaderPrice);
+				sumOfXY = sumOfXY.add(BigDecimal.valueOf((records.get(i).m_leaderPrice * records.get(i).m_followerPrice)));
+				sumOfXSquared = sumOfXSquared.add(BigDecimal.valueOf(records.get(i).m_leaderPrice * records.get(i).m_leaderPrice));
 			}
 
-			float result = ((T * sumOfXY) - (sumOfX * sumOfY)) / ((T * sumOfXSquared) - (sumOfX * sumOfX));
 
-			return result;
-		}
+			BigDecimal numerator = ((TBigDecimal.multiply(sumOfXY)).subtract(sumOfX.multiply(sumOfY)));
+			BigDecimal denominator1 = (TBigDecimal.multiply(sumOfXSquared));
+			BigDecimal denominator2 = sumOfX.pow(2);
+			BigDecimal denominator = (denominator1.subtract(denominator2));
 
-		private float reactionDifferenceFromActual() {
-			float result = 0;
-			for (int i = 0; i < records.size(); i++) {
-				float temp = records.get(i).m_followerPrice - (aPrime + bPrime * records.get(i).m_leaderPrice);
-				result += (temp * temp);
-			}
 
-			return result;
-		}
-	}
-}
+			BigDecimal resultBigDec = numerator.divide(denominator, BigDecimal.ROUND_HALF_EVEN) ;
 
-			float result = ((sumOfXSquared * sumOfY) - (sumOfX * sumOfXY)) / ((T * sumOfXSquared) - (sumOfX * sumOfX));
+			float result = resultBigDec.floatValue() ;
 
-			return result;
-		}
-
-		private float calculateB() {
-			float T = records.size();
-			float sumOfX = 0;
-			float sumOfY = 0;
-			float sumOfXY = 0;
-			float sumOfXSquared = 0;
-
-			for (int i = 0; i < records.size(); i++) {
-				sumOfX += records.get(i).m_leaderPrice;
-				sumOfY += records.get(i).m_followerPrice;
-
-				sumOfXY += (records.get(i).m_leaderPrice * records.get(i).m_followerPrice);
-				sumOfXSquared += (records.get(i).m_leaderPrice * records.get(i).m_leaderPrice);
-			}
-
-			float result = ((T * sumOfXY) - (sumOfX * sumOfY)) / ((T * sumOfXSquared) - (sumOfX * sumOfX));
+			/*if(result > 5) {
+				System.out.println("num: " + numerator + '\n' + " denom: " + denominator + '\n' + " denominator1: " + denominator1 + '\n' + " denominator2: " + denominator2 );
+				System.out.println("B prime value of: " + result + " from Sum of X: " + sumOfX + ", Sum of Y: " + sumOfY + ", Sum of XY: " + sumOfXY + ", Sum of X^2: " + sumOfXSquared + ", window size T: " + T);
+			}*/
 
 			return result;
 		}
