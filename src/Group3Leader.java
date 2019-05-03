@@ -126,8 +126,8 @@ final class Group3Leader extends PlayerImpl {
 				for (Record r : rList) {
 					avg += r.m_leaderPrice;
 				}
-				price = avg / 5;
-				if (price < 1) {
+				price = avg / 5.0f;
+				if (price < 1.0f) {
 					price = 1.75f;
 				}
 			} catch (Exception e) {
