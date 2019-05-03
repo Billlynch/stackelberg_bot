@@ -13,6 +13,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.math.BigDecimal;
 
 import org.apache.commons.math3.analysis.solvers.*;
 import org.apache.commons.math3.complex.Complex;
@@ -25,10 +26,10 @@ import org.apache.commons.math3.complex.Complex;
 final class Group3Leader extends PlayerImpl {
 	/* The randomizer used to generate random price */
 	private final Random m_randomizer = new Random(System.currentTimeMillis());
-
+	private int currentDay;
 	private ArrayList<Record> records = new ArrayList<Record>();
-	private static final int MIN_WINDOW_SIZE = 5;
-	private static final int MAX_WINDOW_SIZE = 60;
+	private static final int MIN_WINDOW_SIZE = 10;
+	private static final int MAX_WINDOW_SIZE = 99;
 
 
 	private Group3Leader() throws RemoteException, NotBoundException {
@@ -45,15 +46,6 @@ final class Group3Leader extends PlayerImpl {
 	@Override
 	public void startSimulation(int p_steps) throws RemoteException {
 		System.out.println("started");
-		// for (int i = 0; i < WINDOW_SIZE; i++) {
-		// 	records.add(m_platformStub.query(m_type, i + 1)); // 1 indexed..
-		// 	// m_platformStub.log(m_type, "Output: " +
-		// 	// String.valueOf(m_platformStub.query(m_type, i).m_followerPrice));
-		// }
-		// ReactionFunction reactionFunction = new ReactionFunction(records);
-		// m_platformStub.log(m_type, String.valueOf(records.size() + " Records slurped"));
-
-		// m_platformStub.log(m_type, String.valueOf(reactionFunction.reactionDifferenceFromActual + " difference"));
 	}
 
 	/**
@@ -64,17 +56,18 @@ final class Group3Leader extends PlayerImpl {
 	 */
 	@Override
 	public void proceedNewDay(int p_date) throws RemoteException {
-		HashMap<Integer, Float> windowsSizeToDifference = new HashMap();
-		HashMap<Integer, Double[]> windowsSizeToCoeficients = new HashMap();
+		currentDay = p_date;
+		HashMap<Integer, Float> windowsSizeToDifference = new HashMap<>();
+		HashMap<Integer, Double[]> windowsSizeToCoeficients = new HashMap<>();
 
 
 		records.clear();
 		
-		for (int i = 0; i <= MIN_WINDOW_SIZE; i++) {
+		for (int i = 1; i < MIN_WINDOW_SIZE; i++) {
 			records.add(m_platformStub.query(m_type, p_date - i)); // 1 indexed..
 		}
 
-		for (int i = MIN_WINDOW_SIZE; i <= MAX_WINDOW_SIZE; i++) {
+		for (int i = MIN_WINDOW_SIZE; i < MAX_WINDOW_SIZE; i++) {
 			records.add(m_platformStub.query(m_type, p_date - i)); // 1 indexed..
 			ReactionFunction reactionFunction = new ReactionFunction(records);
 			windowsSizeToDifference.put(i, reactionFunction.reactionDifferenceFromActual);
@@ -108,27 +101,51 @@ final class Group3Leader extends PlayerImpl {
 		coefs[1] = equationCoeffs[1];
 		coefs[2] = equationCoeffs[2];
 
+		// System.out.println("c - max: " + coefs[0]);
+
 		// solve: xSquaredCoeff x^2 + xCoeff x + (constant - max) = 0
 		LaguerreSolver solver = new LaguerreSolver();
 		Complex[] complexRoots = solver.solveAllComplex(coefs, 1);
-		float price = 1.75f;
 
-	
+		float price = -1f;
 		for (Complex root : complexRoots) {
-			if (root.getReal() > 0) {
+			if (root.getReal() > 1) {
 				price = (float) root.getReal();
 			}
 		}
+
+		// it's gone wrong  - choose the average of the last 5 days or 1.75
+		if (price < 0) {
+			try {
+				List<Record> rList = new ArrayList<>();
+				for (int i = 1; i <= 5; i++) {
+					rList.add(m_platformStub.query(m_type, currentDay - i)); // 1 indexed..
+				}
+
+				float avg = 0f;
+				for (Record r : rList) {
+					avg += r.m_leaderPrice;
+				}
+				price = avg / 5.0f;
+				if (price < 1.0f) {
+					price = 1.75f;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				price = 1.75f;
+			}
+		}
+
 		return price;
 	}
 
 	private float findMaxOfGraph(Double[] equationCoeffs) {
-		// Max = c - (b^2 / 4a)
+
 		return (float) (equationCoeffs[0] - ((equationCoeffs[1] * equationCoeffs[1]) / (4 * equationCoeffs[2])));
 	}
 
 	private Double[] getEquationCoeffs(ReactionFunction reactionFunction) {
-		// Formula: (0.3b - 1)x^2 + (0.3a - 0.3b + 3)x + (- 0.3a - 2)
+
 		double xSquaredCoeff = 0.3 * reactionFunction.bPrime - 1;
 		double xCoeff = 0.3 * reactionFunction.aPrime - 0.3 * reactionFunction.bPrime + 3;
 		double constant = -0.3 * reactionFunction.aPrime - 2;
@@ -170,11 +187,11 @@ final class Group3Leader extends PlayerImpl {
 		}
 
 		private float calculateA() {
-			float T = records.size();
-			float sumOfX = 0;
-			float sumOfY = 0;
-			float sumOfXY = 0;
-			float sumOfXSquared = 0;
+			double T = records.size();
+			double sumOfX = 0;
+			double sumOfY = 0;
+			double sumOfXY = 0;
+			double sumOfXSquared = 0;
 
 			for (int i = 0; i < records.size(); i++) {
 				sumOfX += records.get(i).m_leaderPrice;
@@ -184,37 +201,45 @@ final class Group3Leader extends PlayerImpl {
 				sumOfXSquared += (records.get(i).m_leaderPrice * records.get(i).m_leaderPrice);
 			}
 
-			float result = ((sumOfXSquared * sumOfY) - (sumOfX * sumOfXY)) / ((T * sumOfXSquared) - (sumOfX * sumOfX));
+			double result = ((sumOfXSquared * sumOfY) - (sumOfX * sumOfXY)) / ((T * sumOfXSquared) - (sumOfX * sumOfX));
+			
 
-			return result;
+			return (float) result;
 		}
 
 		private float calculateB() {
 			float T = records.size();
-			float sumOfX = 0;
-			float sumOfY = 0;
-			float sumOfXY = 0;
-			float sumOfXSquared = 0;
+			double sumOfX = 0;
+			double sumOfY = 0;
+			double sumOfXY = 0;
+			double sumOfXSquared = 0;
 
-			for (int i = 0; i < records.size(); i++) {
+			for (int i = 0; i < T; i++) {
 				sumOfX += records.get(i).m_leaderPrice;
 				sumOfY += records.get(i).m_followerPrice;
 
-				sumOfXY += (records.get(i).m_leaderPrice * records.get(i).m_followerPrice);
-				sumOfXSquared += (records.get(i).m_leaderPrice * records.get(i).m_leaderPrice);
+				sumOfXY += records.get(i).m_leaderPrice * records.get(i).m_followerPrice;
+				sumOfXSquared += records.get(i).m_leaderPrice * records.get(i).m_leaderPrice;
 			}
 
-			float result = ((T * sumOfXY) - (sumOfX * sumOfY)) / ((T * sumOfXSquared) - (sumOfX * sumOfX));
+			double numerator =  (T * sumOfXY) - (sumOfX * sumOfY);
+			double denominator1 = T * sumOfXSquared;
+			double denominator2 = sumOfX * sumOfX;
+			double denominator = denominator1 - denominator2;
 
+
+			double resultBigDec = numerator / denominator;
+
+			float result = (float)resultBigDec;
+			
 			return result;
 		}
 
 		private float reactionDifferenceFromActual() {
 			float result = 0;
-			for (int i = 0; i < records.size(); i++) {
-				float temp = records.get(i).m_followerPrice - (aPrime + bPrime * records.get(i).m_leaderPrice);
-				result += (temp * temp);
-			}
+
+			float temp = records.get(records.size() - 1).m_followerPrice - (aPrime + bPrime * records.get(records.size() - 1).m_leaderPrice);
+			result = Math.abs(temp);
 
 			return result;
 		}
