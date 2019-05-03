@@ -1,5 +1,5 @@
  #!/bin/bash
- 
+	
 ./run_gui_and_follower 
 sleep 3
 ./compile_and_run

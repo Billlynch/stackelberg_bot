@@ -1,0 +1,13 @@
+ #!/bin/bash
+
+# Make a temp dir 
+mkdir temp
+
+# Compile into the temp dir
+javac ./src/*.java -d temp
+
+#Move over our source code to the root - Add any new classes here too
+mv temp/Group3Leader* ./
+
+# clean up
+rm -r temp

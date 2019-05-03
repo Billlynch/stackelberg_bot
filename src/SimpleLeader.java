@@ -20,7 +20,6 @@ final class SimpleLeader
 		throws RemoteException, NotBoundException
 	{
 		super(PlayerType.LEADER, "Simple Leader");
-		System.out.println("Hello world from the leader I made");
 	}
 
 	@Override
@@ -39,7 +38,7 @@ final class SimpleLeader
 	public void proceedNewDay(int p_date)
 		throws RemoteException
 	{
-		m_platformStub.publishPrice(m_type, genPrice(1.8f, 0.05f));
+		m_platformStub.publishPrice(m_type, 10.0f);
 	}
 
 	/**
