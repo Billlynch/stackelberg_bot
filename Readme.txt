@@ -16,7 +16,7 @@ To run the simulation with the SimpleLeader, you need to
 
 i) run
 
-/usr/java/jdk1.6.0_22/bin/rmiregistry &
+/usr/java/latest/bin/rmiregistry &
 
 to enable RMI registration;
 
