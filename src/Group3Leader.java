@@ -44,6 +44,7 @@ final class Group3Leader extends PlayerImpl {
 
 	@Override
 	public void startSimulation(int p_steps) throws RemoteException {
+		System.out.println("started");
 		// for (int i = 0; i < WINDOW_SIZE; i++) {
 		// 	records.add(m_platformStub.query(m_type, i + 1)); // 1 indexed..
 		// 	// m_platformStub.log(m_type, "Output: " +
@@ -79,7 +80,7 @@ final class Group3Leader extends PlayerImpl {
 
 		Integer bestWindowSize = Collections.min(windowsSizeToDifference.entrySet(), Map.Entry.comparingByValue())
 										.getKey();
-		System.out.println("on day: " + p_date + " window size: " + bestWindowSize + " was chosen, with a difference of: " + windowsSizeToDifference.get(bestWindowSize) + ".");
+		System.out.println("on day: " + p_date + " window size: " + bestWindowSize + " was chosen, with a difference of: " + windowsSizeToDifference.get(bestWindowSize) + " with C, X, X^2: " + windowsSizeToCoeficients.get(bestWindowSize)[0] + ", " +  windowsSizeToCoeficients.get(bestWindowSize)[1] + ", " +  windowsSizeToCoeficients.get(bestWindowSize)[2] + "." );
 
 		m_platformStub.publishPrice(m_type, genPrice(windowsSizeToCoeficients.get(bestWindowSize)));
 	}
