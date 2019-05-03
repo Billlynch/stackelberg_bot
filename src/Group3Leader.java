@@ -28,8 +28,8 @@ final class Group3Leader extends PlayerImpl {
 	private final Random m_randomizer = new Random(System.currentTimeMillis());
 
 	private ArrayList<Record> records = new ArrayList<Record>();
-	private static final int MIN_WINDOW_SIZE = 5;
-	private static final int MAX_WINDOW_SIZE = 60;
+	private static final int MIN_WINDOW_SIZE = 98;
+	private static final int MAX_WINDOW_SIZE = 99;
 
 
 	private Group3Leader() throws RemoteException, NotBoundException {
@@ -71,11 +71,11 @@ final class Group3Leader extends PlayerImpl {
 
 		records.clear();
 		
-		for (int i = 0; i <= MIN_WINDOW_SIZE; i++) {
+		for (int i = 1; i < MIN_WINDOW_SIZE; i++) {
 			records.add(m_platformStub.query(m_type, p_date - i)); // 1 indexed..
 		}
 
-		for (int i = MIN_WINDOW_SIZE; i <= MAX_WINDOW_SIZE; i++) {
+		for (int i = MIN_WINDOW_SIZE; i < MAX_WINDOW_SIZE; i++) {
 			records.add(m_platformStub.query(m_type, p_date - i)); // 1 indexed..
 			ReactionFunction reactionFunction = new ReactionFunction(records);
 			windowsSizeToDifference.put(i, reactionFunction.reactionDifferenceFromActual);
@@ -86,7 +86,7 @@ final class Group3Leader extends PlayerImpl {
 
 		Integer bestWindowSize = Collections.min(windowsSizeToDifference.entrySet(), Map.Entry.comparingByValue())
 										.getKey();
-		//System.out.println("on day: " + p_date + " window size: " + bestWindowSize + " was chosen, with a difference of: " + windowsSizeToDifference.get(bestWindowSize) + " with C, X, X^2: " + windowsSizeToCoeficients.get(bestWindowSize)[0] + ", " +  windowsSizeToCoeficients.get(bestWindowSize)[1] + ", " +  windowsSizeToCoeficients.get(bestWindowSize)[2] + "." );
+		System.out.println("on day: " + p_date + " window size: " + bestWindowSize + " was chosen, with a difference of: " + windowsSizeToDifference.get(bestWindowSize) + " with C, X, X^2: " + windowsSizeToCoeficients.get(bestWindowSize)[0] + ", " +  windowsSizeToCoeficients.get(bestWindowSize)[1] + ", " +  windowsSizeToCoeficients.get(bestWindowSize)[2] + "." );
 
 //		if(windowsSizeToCoeficients.get(bestWindowSize)[2] > 0) {
 //			System.out.println("On day: " + p_date + ", X^2 value over 0 of: " + windowsSizeToCoeficients.get(bestWindowSize)[2]);
@@ -113,6 +113,8 @@ final class Group3Leader extends PlayerImpl {
 		coefs[1] = equationCoeffs[1];
 		coefs[2] = equationCoeffs[2];
 
+		// System.out.println("c - max: " + coefs[0]);
+
 		// solve: xSquaredCoeff x^2 + xCoeff x + (constant - max) = 0
 		LaguerreSolver solver = new LaguerreSolver();
 		Complex[] complexRoots = solver.solveAllComplex(coefs, 1);
@@ -120,15 +122,19 @@ final class Group3Leader extends PlayerImpl {
 
 	
 		for (Complex root : complexRoots) {
-			if (root.getReal() > 0) {
+			if (root.getReal() > 1) {
 				price = (float) root.getReal();
 			}
 		}
+
+		// System.out.println("price: " + price);
+
 		return price;
 	}
 
 	private float findMaxOfGraph(Double[] equationCoeffs) {
 		// Max = c - (b^2 / 4a)
+		// System.out.println("max: " + (float) (equationCoeffs[0] - ((equationCoeffs[1] * equationCoeffs[1]) / (4 * equationCoeffs[2]))));
 		return (float) (equationCoeffs[0] - ((equationCoeffs[1] * equationCoeffs[1]) / (4 * equationCoeffs[2])));
 	}
 
@@ -140,6 +146,7 @@ final class Group3Leader extends PlayerImpl {
 //		}
 		double xCoeff = 0.3 * reactionFunction.aPrime - 0.3 * reactionFunction.bPrime + 3;
 		double constant = -0.3 * reactionFunction.aPrime - 2;
+
 
 		return new Double[] {constant, xCoeff, xSquaredCoeff};
 	}
@@ -178,11 +185,11 @@ final class Group3Leader extends PlayerImpl {
 		}
 
 		private float calculateA() {
-			float T = records.size();
-			float sumOfX = 0;
-			float sumOfY = 0;
-			float sumOfXY = 0;
-			float sumOfXSquared = 0;
+			double T = records.size();
+			double sumOfX = 0;
+			double sumOfY = 0;
+			double sumOfXY = 0;
+			double sumOfXSquared = 0;
 
 			for (int i = 0; i < records.size(); i++) {
 				sumOfX += records.get(i).m_leaderPrice;
@@ -192,9 +199,12 @@ final class Group3Leader extends PlayerImpl {
 				sumOfXSquared += (records.get(i).m_leaderPrice * records.get(i).m_leaderPrice);
 			}
 
-			float result = ((sumOfXSquared * sumOfY) - (sumOfX * sumOfXY)) / ((T * sumOfXSquared) - (sumOfX * sumOfX));
+			double result = ((sumOfXSquared * sumOfY) - (sumOfX * sumOfXY)) / ((T * sumOfXSquared) - (sumOfX * sumOfX));
 
-			return result;
+			// System.out.println("A: " + result);
+			
+
+			return (float) result;
 		}
 
 		private float calculateB() {
@@ -205,6 +215,11 @@ final class Group3Leader extends PlayerImpl {
 			BigDecimal sumOfXY = BigDecimal.ZERO;
 			BigDecimal sumOfXSquared = BigDecimal.ZERO;
 
+
+			// for (Record r : records) {
+			// 	System.out.println("Record: " + r.m_date + " leaderPrice: " + r.m_leaderPrice + " followerPrice: " + r.m_followerPrice);
+			// }
+
 			for (int i = 0; i < T; i++) {
 				sumOfX = sumOfX.add(BigDecimal.valueOf(records.get(i).m_leaderPrice));
 				sumOfY = sumOfY.add(BigDecimal.valueOf(records.get(i).m_followerPrice));
@@ -212,6 +227,14 @@ final class Group3Leader extends PlayerImpl {
 				sumOfXY = sumOfXY.add(BigDecimal.valueOf((records.get(i).m_leaderPrice * records.get(i).m_followerPrice)));
 				sumOfXSquared = sumOfXSquared.add(BigDecimal.valueOf(records.get(i).m_leaderPrice * records.get(i).m_leaderPrice));
 			}
+
+			// System.out.println("sum of x: " + sumOfX);
+			// System.out.println("sum of y: " + sumOfY);
+
+			// System.out.println("sum of xy: " + sumOfXY);
+
+			// System.out.println("sum of (x^2): " + sumOfXSquared);
+
 
 
 			BigDecimal numerator = ((TBigDecimal.multiply(sumOfXY)).subtract(sumOfX.multiply(sumOfY)));
@@ -228,7 +251,8 @@ final class Group3Leader extends PlayerImpl {
 				System.out.println("num: " + numerator + '\n' + " denom: " + denominator + '\n' + " denominator1: " + denominator1 + '\n' + " denominator2: " + denominator2 );
 				System.out.println("B prime value of: " + result + " from Sum of X: " + sumOfX + ", Sum of Y: " + sumOfY + ", Sum of XY: " + sumOfXY + ", Sum of X^2: " + sumOfXSquared + ", window size T: " + T);
 			}*/
-
+			// System.out.println("B: " + result);
+			
 			return result;
 		}
 
@@ -239,7 +263,7 @@ final class Group3Leader extends PlayerImpl {
 				result += (temp * temp);
 			}
 
-			return result;
+			return result / records.size();
 		}
 	}
 }
