@@ -26,9 +26,9 @@ import org.apache.commons.math3.complex.Complex;
 final class Group3Leader extends PlayerImpl {
 	/* The randomizer used to generate random price */
 	private final Random m_randomizer = new Random(System.currentTimeMillis());
-
+	private int currentDay;
 	private ArrayList<Record> records = new ArrayList<Record>();
-	private static final int MIN_WINDOW_SIZE = 98;
+	private static final int MIN_WINDOW_SIZE = 10;
 	private static final int MAX_WINDOW_SIZE = 99;
 
 
@@ -65,6 +65,7 @@ final class Group3Leader extends PlayerImpl {
 	 */
 	@Override
 	public void proceedNewDay(int p_date) throws RemoteException {
+		currentDay = p_date;
 		HashMap<Integer, Float> windowsSizeToDifference = new HashMap();
 		HashMap<Integer, Double[]> windowsSizeToCoeficients = new HashMap();
 
@@ -118,16 +119,35 @@ final class Group3Leader extends PlayerImpl {
 		// solve: xSquaredCoeff x^2 + xCoeff x + (constant - max) = 0
 		LaguerreSolver solver = new LaguerreSolver();
 		Complex[] complexRoots = solver.solveAllComplex(coefs, 1);
-		float price = 200f;
 
-	
+		float price = -1f;
 		for (Complex root : complexRoots) {
 			if (root.getReal() > 1) {
 				price = (float) root.getReal();
 			}
 		}
 
-		// System.out.println("price: " + price);
+		// it's gone wrong  - choose the average of the last 5 days or 1.75
+		if (price < 0) {
+			try {
+				List<Record> rList = new ArrayList();
+				for (int i = 1; i <= 5; i++) {
+					rList.add(m_platformStub.query(m_type, currentDay - i)); // 1 indexed..
+				}
+
+				float avg = 0f;
+				for (Record r : rList) {
+					avg += r.m_leaderPrice;
+				}
+				price = avg / 5;
+				if (price < 1) {
+					price = 1.75f;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				price = 1.75f;
+			}
+		}
 
 		return price;
 	}
@@ -258,12 +278,14 @@ final class Group3Leader extends PlayerImpl {
 
 		private float reactionDifferenceFromActual() {
 			float result = 0;
-			for (int i = 0; i < records.size(); i++) {
-				float temp = records.get(i).m_followerPrice - (aPrime + bPrime * records.get(i).m_leaderPrice);
-				result += (temp * temp);
-			}
+//			for (int i = 0; i < records.size(); i++) {
+//				float temp = records.get(i).m_followerPrice - (aPrime + bPrime * records.get(i).m_leaderPrice);
+//				result += (temp * temp);
+//			}
+			float temp = records.get(records.size() - 1).m_followerPrice - (aPrime + bPrime * records.get(records.size() - 1).m_leaderPrice);
+			result = Math.abs(temp);
 
-			return result / records.size();
+			return result;
 		}
 	}
 }
