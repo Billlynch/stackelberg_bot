@@ -28,8 +28,8 @@ final class Group3Leader extends PlayerImpl {
 	private final Random m_randomizer = new Random(System.currentTimeMillis());
 
 	private ArrayList<Record> records = new ArrayList<Record>();
-	private static final int MIN_WINDOW_SIZE = 6;
-	private static final int MAX_WINDOW_SIZE = 10;
+	private static final int MIN_WINDOW_SIZE = 98;
+	private static final int MAX_WINDOW_SIZE = 99;
 
 
 	private Group3Leader() throws RemoteException, NotBoundException {
@@ -113,7 +113,7 @@ final class Group3Leader extends PlayerImpl {
 		coefs[1] = equationCoeffs[1];
 		coefs[2] = equationCoeffs[2];
 
-		System.out.println("c - max: " + coefs[0]);
+		// System.out.println("c - max: " + coefs[0]);
 
 		// solve: xSquaredCoeff x^2 + xCoeff x + (constant - max) = 0
 		LaguerreSolver solver = new LaguerreSolver();
@@ -127,14 +127,14 @@ final class Group3Leader extends PlayerImpl {
 			}
 		}
 
-		System.out.println("price: " + price);
+		// System.out.println("price: " + price);
 
 		return price;
 	}
 
 	private float findMaxOfGraph(Double[] equationCoeffs) {
 		// Max = c - (b^2 / 4a)
-		System.out.println("max: " + (float) (equationCoeffs[0] - ((equationCoeffs[1] * equationCoeffs[1]) / (4 * equationCoeffs[2]))));
+		// System.out.println("max: " + (float) (equationCoeffs[0] - ((equationCoeffs[1] * equationCoeffs[1]) / (4 * equationCoeffs[2]))));
 		return (float) (equationCoeffs[0] - ((equationCoeffs[1] * equationCoeffs[1]) / (4 * equationCoeffs[2])));
 	}
 
@@ -201,7 +201,7 @@ final class Group3Leader extends PlayerImpl {
 
 			double result = ((sumOfXSquared * sumOfY) - (sumOfX * sumOfXY)) / ((T * sumOfXSquared) - (sumOfX * sumOfX));
 
-			System.out.println("A: " + result);
+			// System.out.println("A: " + result);
 			
 
 			return (float) result;
@@ -216,9 +216,9 @@ final class Group3Leader extends PlayerImpl {
 			BigDecimal sumOfXSquared = BigDecimal.ZERO;
 
 
-			for (Record r : records) {
-				System.out.println("Record: " + r.m_date + " leaderPrice: " + r.m_leaderPrice + " followerPrice: " + r.m_followerPrice);
-			}
+			// for (Record r : records) {
+			// 	System.out.println("Record: " + r.m_date + " leaderPrice: " + r.m_leaderPrice + " followerPrice: " + r.m_followerPrice);
+			// }
 
 			for (int i = 0; i < T; i++) {
 				sumOfX = sumOfX.add(BigDecimal.valueOf(records.get(i).m_leaderPrice));
@@ -228,12 +228,12 @@ final class Group3Leader extends PlayerImpl {
 				sumOfXSquared = sumOfXSquared.add(BigDecimal.valueOf(records.get(i).m_leaderPrice * records.get(i).m_leaderPrice));
 			}
 
-			System.out.println("sum of x: " + sumOfX);
-			System.out.println("sum of y: " + sumOfY);
+			// System.out.println("sum of x: " + sumOfX);
+			// System.out.println("sum of y: " + sumOfY);
 
-			System.out.println("sum of xy: " + sumOfXY);
+			// System.out.println("sum of xy: " + sumOfXY);
 
-			System.out.println("sum of (x^2): " + sumOfXSquared);
+			// System.out.println("sum of (x^2): " + sumOfXSquared);
 
 
 
@@ -251,7 +251,7 @@ final class Group3Leader extends PlayerImpl {
 				System.out.println("num: " + numerator + '\n' + " denom: " + denominator + '\n' + " denominator1: " + denominator1 + '\n' + " denominator2: " + denominator2 );
 				System.out.println("B prime value of: " + result + " from Sum of X: " + sumOfX + ", Sum of Y: " + sumOfY + ", Sum of XY: " + sumOfXY + ", Sum of X^2: " + sumOfXSquared + ", window size T: " + T);
 			}*/
-			System.out.println("B: " + result);
+			// System.out.println("B: " + result);
 			
 			return result;
 		}
@@ -263,7 +263,7 @@ final class Group3Leader extends PlayerImpl {
 				result += (temp * temp);
 			}
 
-			return result;
+			return result / records.size();
 		}
 	}
 }
